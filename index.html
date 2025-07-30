@@ -85,17 +85,25 @@
           params: ''
         };
       },
-      async mounted() {
+            async mounted() {
         const init = JSON.parse(tg.initData || '{}');
         this.params = `?brand=${init.brand}&model=${init.model}&body=${init.body}`;
-        // Для GitHub Pages достаточно относительных путей
-        const [dRes, lRes] = await Promise.all([
-          fetch('data.json'),
-          fetch('lamp_links.json')
-        ]);
-        this.allData   = await dRes.json();
-        this.lampLinks = await lRes.json();
-        this.brands    = [...new Set(this.allData.map(i=>i.Марка))].sort();
+        // Определяем базовый путь к JSON-файлам
+        const base = window.location.href.replace(/\/[^\/]*$/, '/');
+        try {
+          const [dRes, lRes] = await Promise.all([
+            fetch(`${base}data.json`, { cache: 'no-cache' }),
+            fetch(`${base}lamp_links.json`, { cache: 'no-cache' })
+          ]);
+          if (!dRes.ok) throw new Error(`Failed to load data.json: ${dRes.status}`);
+          if (!lRes.ok) throw new Error(`Failed to load lamp_links.json: ${lRes.status}`);
+          this.allData   = await dRes.json();
+          this.lampLinks = await lRes.json();
+          this.brands    = [...new Set(this.allData.map(i=>i.Марка))].sort();
+        } catch (err) {
+          console.error(err);
+          alert('Ошибка загрузки данных. Проверьте, что файлы data.json и lamp_links.json доступны.');
+        }
         this.loaded = true;
       },
       methods: {
