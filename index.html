@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Каталог ламп</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Vue.js -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+    header { background: #0088cc; color: white; padding: 1rem; text-align: center; }
+    .container { padding: 1rem; }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .controls select { padding: 0.5rem; flex: 1; min-width: 120px; border: 1px solid #ccc; border-radius: 4px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 1rem; }
+    .card {
+      background: white; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .card img { width: 100%; height: 140px; object-fit: contain; background: #fafafa; }
+    .card-content { flex:1; padding: 0.75rem; }
+    .card-content h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .card-content p { margin: 0; font-size: 0.875rem; color: #555; }
+    .card-footer { padding: 0.75rem; text-align: center; }
+    .card-footer a { display: inline-block; padding: 0.5rem 1rem; background:#0088cc; color:white; text-decoration:none; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Каталог ламп</h1>
+  </header>
+  <div id="app" class="container">
+    <div v-if="!loaded">Загрузка...</div>
+    <div v-else>
+      <div class="controls">
+        <select v-model="selectedBrand" @change="onBrandChange">
+          <option disabled value="">Марка</option>
+          <option v-for="b in brands" :key="b" :value="b">{{ b }}</option>
+        </select>
+        <select v-model="selectedModel" @change="onModelChange" :disabled="!selectedBrand">
+          <option disabled value="">Модель</option>
+          <option v-for="m in models" :key="m" :value="m">{{ m }}</option>
+        </select>
+        <select v-model="selectedBody" @change="onBodyChange" :disabled="!selectedModel">
+          <option disabled value="">Кузов</option>
+          <option v-for="c in bodies" :key="c" :value="c">{{ c }}</option>
+        </select>
+        <select v-model="selectedCombo" @change="onComboChange" :disabled="!selectedBody">
+          <option disabled value="">Установка+цоколь</option>
+          <option v-for="(item,index) in combos" :key="index" :value="index">
+            {{ item.field }} {{ item.socket }}
+          </option>
+        </select>
+      </div>
+      <div class="cards">
+        <div class="card" v-for="item in displayed" :key="item.url">
+          <img :src="item.img || defaultImg" alt="lamp">
+          <div class="card-content">
+            <h3>{{ item.name }}</h3>
+            <p>Socket: {{ item.socket }} · Power: {{ item.power }}</p>
+          </div>
+          <div class="card-footer">
+            <a :href="item.url + params" target="_blank">Перейти</a>
+          </div>
+        </div>
+      </div>
+      <div v-if="displayed.length===0" style="text-align:center;color:#888;">Нет результатов</div>
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    Vue.createApp({
+      data() {
+        return {
+          loaded: false,
+          allData: [],
+          lampLinks: [],
+          brands: [], models: [], bodies: [], combos: [],
+          selectedBrand: '', selectedModel: '', selectedBody: '', selectedCombo: null,
+          displayed: [], defaultImg: 'https://nts-auto.com/upload/iblock/placeholder.png',
+          params: ''
+        };
+      },
+      async mounted() {
+        const init = JSON.parse(tg.initData || '{}');
+        this.params = `?brand=${init.brand}&model=${init.model}&body=${init.body}`;
+        // Для GitHub Pages достаточно относительных путей
+        const [dRes, lRes] = await Promise.all([
+          fetch('data.json'),
+          fetch('lamp_links.json')
+        ]);
+        this.allData   = await dRes.json();
+        this.lampLinks = await lRes.json();
+        this.brands    = [...new Set(this.allData.map(i=>i.Марка))].sort();
+        this.loaded = true;
+      },
+      methods: {
+        onBrandChange() {
+          this.models = [...new Set(
+            this.allData.filter(i=>i.Марка===this.selectedBrand).map(i=>i.Модель)
+          )].sort();
+          this.selectedModel = '';
+          this.bodies = [];
+          this.combos = [];
+          this.displayed = [];
+        },
+        onModelChange() {
+          this.bodies = [...new Set(
+            this.allData.filter(i=>i.Марка===this.selectedBrand && i.Модель===this.selectedModel)
+            .map(i=>i.Кузов)
+          )].sort();
+          this.selectedBody = '';
+          this.combos = [];
+          this.displayed = [];
+        },
+        onBodyChange() {
+          const rec = this.allData.find(i=>
+            i.Марка===this.selectedBrand && i.Модель===this.selectedModel && i.Кузов===this.selectedBody
+          );
+          this.combos = [];
+          for(const [field, vals] of Object.entries(rec)){
+            if(['Марка','Модель','Кузов','Годы выпуска'].includes(field)) continue;
+            if(Array.isArray(vals)) vals.forEach(v=> this.combos.push({field, socket:v}));
+            else this.combos.push({field, socket:vals});
+          }
+          this.selectedCombo = null;
+          this.displayed = [];
+        },
+        onComboChange() {
+          const { socket } = this.combos[this.selectedCombo];
+          this.displayed = this.lampLinks
+            .filter(l=> Array.isArray(l.sockets)
+                          ? l.sockets.includes(socket)
+                          : l.sockets===socket)
+            .map(l=> ({ ...l, socket }));
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
+
+<!--
+Инструкция по GitHub Pages:
+1. Создайте репозиторий на GitHub и залейте файлы `index.html` (этот файл), `data.json`, `lamp_links.json` в корень.
+2. В настройках репозитория (Settings → Pages) выберите ветку `main` и папку `/root`.
+3. GitHub Pages опубликует сайт по адресу: `https://<username>.github.io/<repo>/`.
+4. Укажите в боте URL: `https://<username>.github.io/<repo>/`.
+-->
