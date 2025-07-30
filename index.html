@@ -91,8 +91,8 @@
         try {
           // Загружаем JSON-файлы из того же каталога
           const [dRes, lRes] = await Promise.all([
-            fetch('data.json', { cache: 'no-cache' }),
-            fetch('lamp_links.json', { cache: 'no-cache' })
+            fetch('https://f4radayz.github.io/podbortg/data.json', { cache: 'no-cache' }),
+            fetch('https://f4radayz.github.io/podbortg/lamp_links.json', { cache: 'no-cache' })
           ]);
           // Проверяем, что это JSON
           if (!dRes.ok || !dRes.headers.get('content-type')?.includes('application/json')) {
