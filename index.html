@@ -91,8 +91,8 @@
         try {
           // Загружаем JSON-файлы из того же каталога
           const [dRes, lRes] = await Promise.all([
-            fetch('https://f4radayz.github.io/podbortg/data.json', { cache: 'no-cache' }),
-            fetch('https://f4radayz.github.io/podbortg/lamp_links.json', { cache: 'no-cache' })
+            fetch('data.json', { cache: 'no-cache' }),
+            fetch('lamp_links.json', { cache: 'no-cache' })
           ]);
           // Проверяем, что это JSON
           if (!dRes.ok || !dRes.headers.get('content-type')?.includes('application/json')) {
@@ -159,7 +159,10 @@
 <!--
 Инструкция по GitHub Pages:
 1. Создайте репозиторий на GitHub и залейте файлы `index.html` (этот файл), `data.json`, `lamp_links.json` в корень.
-2. В настройках репозитория (Settings → Pages) выберите ветку `main` и папку `/root`.
-3. GitHub Pages опубликует сайт по адресу: `https://<username>.github.io/<repo>/`.
-4. Укажите в боте URL: `https://<username>.github.io/<repo>/`.
+2. Убедитесь, что JSON-файлы — корректный JSON без лишних запятых и ошибок (проверьте через JSONLint).
+3. Файлы не должны содержать HTML или сообщения об ошибке GitHub Pages (404), иначе при `fetch` вы получите HTML вместо JSON.
+4. В настройках репозитория (Settings → Pages) выберите ветку `main` и папку `/ (root)`.
+5. GitHub Pages опубликует сайт по адресу: `https://<username>.github.io/<repo>/`.
+6. Проверьте, что перейдя по `https://<username>.github.io/<repo>/data.json` вы видите чистую JSON-массив без HTML.
+7. Укажите в боте URL: `https://<username>.github.io/<repo>/`.
 -->
