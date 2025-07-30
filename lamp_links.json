@@ -1,0 +1,41 @@
+[
+  {
+    "name": "Светодиодные лампы A98 H7 CANBUS",
+    "url": "https://nts-auto.com/catalog/.../h7_canbus/",
+    "img": "https://nts-auto.com/upload/iblock/7f2/preview.png",
+    "sockets": ["H7"],
+    "power": "170W",
+    "lifetime": "30000 ч",
+    "features": [
+      "Встроенная обманка",
+      "Вентилятор + радиатор",
+      "Корпус из алюминиевого сплава",
+      "CANBUS"
+    ]
+  },
+  {
+    "name": "Philips Vision H1",
+    "url": "https://example.com/philips-h1",
+    "img": "https://example.com/images/philips-h1.png",
+    "sockets": ["H1"],
+    "power": "55W",
+    "lifetime": "2000 ч",
+    "features": [
+      "До 30% ярче стандартных",
+      "Оптимизированный световой пучок"
+    ]
+  },
+  {
+    "name": "Osram Cool Blue W5W",
+    "url": "https://example.com/osram-w5w",
+    "img": "https://example.com/images/osram-w5w.png",
+    "sockets": ["W5W"],
+    "power": "5W",
+    "lifetime": "2000 ч",
+    "features": [
+      "Холодный белый свет",
+      "Привлекательный дизайн"
+    ]
+  }
+  // ... и т. д. для всех ваших позиций
+]
